@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Your membership · Drop-in</title>
+<style>
+  /* Drop-in brand: purple #6453b8, light pink "Peach", no shadows. */
+  :root {
+    --purple: #6453b8;
+    --purple-soft: #ece9f8;
+    --peach: #fbe4d8;
+    --ink: #1d1a24;
+    --muted: #6b6676;
+    --line: #e4e0ea;
+    --bg: #fffaf7;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 24px 20px 48px; min-height: 100vh; display: flex; flex-direction: column; }
+  .brand { font-weight: 700; letter-spacing: .08em; font-size: 13px; color: var(--purple); text-transform: uppercase; margin-bottom: 18px; display:flex; justify-content:space-between; align-items:center; }
+  .progress { display: flex; gap: 6px; }
+  .progress span { width: 22px; height: 4px; border-radius: 4px; background: var(--line); }
+  .progress span.on { background: var(--purple); }
+  h1 {
+    font-family: "VC Henrietta", "Henrietta", Georgia, "Times New Roman", serif;
+    font-weight: 700; font-size: 30px; line-height: 1.12; margin: 6px 0 10px; letter-spacing: -.01em;
+  }
+  h2 { font-size: 17px; margin: 0 0 4px; }
+  p { margin: 0 0 14px; }
+  .muted { color: var(--muted); }
+  .small { font-size: 14px; }
+  .plan-card { background: var(--peach); border-radius: var(--radius); padding: 16px 18px; margin: 14px 0 22px; }
+  .plan-card .label { font-size: 13px; color: var(--muted); }
+  .plan-card .value { font-weight: 600; }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; }
+
+  .options { display: flex; flex-direction: column; gap: 10px; margin: 8px 0 20px; }
+  .opt {
+    display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+    background: #fff; border: 1.5px solid var(--line); border-radius: var(--radius);
+    padding: 14px 16px; font: inherit; color: inherit; cursor: pointer;
+  }
+  .opt:active { background: var(--purple-soft); }
+  .opt[aria-pressed="true"] { border-color: var(--purple); background: var(--purple-soft); }
+  .opt .dot { flex: 0 0 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--line); }
+  .opt[aria-pressed="true"] .dot { border: 5px solid var(--purple); }
+
+  .offer { border: 1.5px solid var(--line); background: #fff; border-radius: var(--radius); padding: 18px; margin-bottom: 12px; }
+  .offer.lead { border-color: var(--purple); }
+  .offer .tag { display: inline-block; font-size: 12px; font-weight: 600; color: var(--purple); background: var(--purple-soft); border-radius: 20px; padding: 3px 10px; margin-bottom: 10px; }
+  .offer .price { font-family: "VC Henrietta", Georgia, serif; font-size: 26px; font-weight: 700; }
+  .offer ul { margin: 8px 0 14px; padding-left: 18px; }
+  .offer li { margin: 3px 0; }
+
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0 8px; }
+  .seg button { font: inherit; padding: 12px 6px; border-radius: 12px; border: 1.5px solid var(--line); background: #fff; cursor: pointer; color: inherit; }
+  .seg button[aria-pressed="true"] { border-color: var(--purple); background: var(--purple-soft); font-weight: 600; }
+
+  textarea, input[type="date"] {
+    width: 100%; font: inherit; color: inherit; border: 1.5px solid var(--line); border-radius: 12px;
+    padding: 12px 14px; background: #fff; margin: 4px 0 16px;
+  }
+  textarea { min-height: 110px; resize: vertical; }
+  textarea:focus, input:focus, button:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+
+  .btn { display: block; width: 100%; font: inherit; font-weight: 600; text-align: center; border-radius: 999px; padding: 15px 18px; cursor: pointer; border: 1.5px solid var(--purple); text-decoration: none; }
+  .btn-primary { background: var(--purple); color: #fff; }
+  .btn-primary[disabled] { opacity: .4; cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--purple); margin-top: 10px; }
+  .link { background: none; border: 0; padding: 12px 0; font: inherit; color: var(--muted); text-decoration: underline; cursor: pointer; width: 100%; text-align: center; }
+  .back { background: none; border: 0; padding: 0; font: inherit; font-size: 14px; color: var(--muted); cursor: pointer; margin-bottom: 8px; align-self: flex-start; }
+
+  .summary { background: #fff; border: 1.5px solid var(--line); border-radius: var(--radius); padding: 14px 18px; margin: 10px 0 22px; }
+  .summary .row { border-bottom: 1px solid var(--line); padding: 10px 0; }
+  .summary .row:last-child { border-bottom: 0; }
+  .summary .k { color: var(--muted); font-size: 14px; }
+  .summary .v { font-weight: 600; text-align: right; }
+
+  .center { text-align: center; }
+  .spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--purple-soft); border-top-color: var(--purple); animation: spin .9s linear infinite; margin: 60px auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .demo-banner { background: var(--ink); color: #fff; font-size: 12px; text-align: center; padding: 6px; }
+  .error-box { background: var(--peach); border-radius: var(--radius); padding: 14px 16px; margin: 12px 0; font-size: 14px; }
+  .hidden { display: none !important; }
+  .spacer { flex: 1; }
+</style>
+</head>
+<body>
+<div id="demoBanner" class="demo-banner hidden">Demo mode: sample member, nothing is submitted</div>
+<main class="wrap" id="app" aria-live="polite">
+  <div class="spinner" role="status" aria-label="Loading"></div>
+  <p class="center muted">Getting your membership details…</p>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  // ───────────────────────── CONFIG ─────────────────────────
+  var CONFIG = {
+    OPTIX_GRAPHQL: "https://api.optixapp.com/graphql",
+    // HubSpot form "Pause / Lite / Cancel - In-app flow (2026)" (portal 143715922, EU1). Clone of the old form with only email required.
+    HUBSPOT_PORTAL_ID: "143715922",
+    HUBSPOT_FORM_GUID: "da7ff2c0-8fcd-4503-b5e0-92b98c8a26a5",
+    HUBSPOT_SUBMIT_BASE: "https://api-eu1.hsforms.com/submissions/v3/integration/submit",
+    TEAM_EMAIL: "hello@drop-in.com",
+    LITE: { hours: 30, price: "£120" },
+    MAX_PAUSE_MONTHS: 3,
+    // New contact property (dropdown) that records what the member chose.
+    REQUEST_TYPE_PROPERTY: "exit_request_type",
+    REQUEST_TYPE: { CANCEL: "Cancel", PAUSE: "Pause", LITE: "Switch to Lite" }
+  };
+
+  // Member-facing label → stored churn_reason value (case-sensitive, do not edit the values).
+  // offer: which alternative we lead with for that reason.
+  var REASONS = [
+    { label: "It costs more than I want to spend", value: "Price-sensitive", offer: "lite" },
+    { label: "I'm not using it enough", value: "Low-usage", offer: "lite" },
+    { label: "My employer wants me in the office more", value: "Work Situation Changed", offer: "lite" },
+    { label: "My work situation changed", value: "Work Situation Changed", offer: "pause" },
+    { label: "I'm moving, or home life changed", value: "Living Situation Changed", offer: "pause" },
+    { label: "I'm working from home full-time now", value: "Switched to Full-Time WFH", offer: "lite" },
+    { label: "I'm moving to a different workspace", value: "Competitive Churn", offer: "lite" },
+    { label: "Unhappy with the space or service", value: "Dissatisfied", offer: "pause" },
+    { label: "I only needed it short-term", value: "1-Month Only", offer: "pause" },
+    { label: "I just need a break", value: "Taking a Break", offer: "pause" },
+    { label: "Something else", value: "Other", offer: "pause" }
+  ];
+
+  var RETURN_OPTIONS = [
+    { label: "Yes, and I know roughly when", value: "Planned Pause (return date confirmed)", needsDate: true },
+    { label: "Probably, just not sure when", value: "Soft Churn (will be back, no date)" },
+    { label: "Not for now", value: "Hard Churn (done for now)" }
+  ];
+
+  // ───────────────────────── STATE ─────────────────────────
+  var params = new URLSearchParams(window.location.search);
+  var DEMO = params.get("demo") === "1";
+  var state = {
+    member: null,          // { fullName, firstName, email, planName, renewalDate, endDate }
+    step: "loading",
+    reason: null,          // REASONS item
+    path: null,            // "cancel" | "pause" | "lite"
+    pauseMonths: null,
+    returnOpt: null,
+    returnDate: "",
+    feedback: "",
+    submitting: false,
+    submitError: false
+  };
+  var history = [];
+
+  // ───────────────────────── DATES ─────────────────────────
+  // All dates are worked out in London time so a renewal at 00:00 BST doesn't slip a day.
+  function londonISO(date) {
+    var parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
+    var o = {}; parts.forEach(function (p) { o[p.type] = p.value; });
+    return o.year + "-" + o.month + "-" + o.day;
+  }
+  function addMonthsISO(iso, n) {
+    var y = +iso.slice(0, 4), m = +iso.slice(5, 7) - 1, d = +iso.slice(8, 10);
+    var target = new Date(Date.UTC(y, m + n, 1));
+    var lastDay = new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0)).getUTCDate();
+    target.setUTCDate(Math.min(d, lastDay));
+    return target.toISOString().slice(0, 10);
+  }
+  function pretty(iso) {
+    var d = new Date(iso + "T12:00:00Z");
+    return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long", timeZone: "UTC" });
+  }
+  function todayISO() { return londonISO(new Date()); }
+
+  // ───────────────────────── LOAD MEMBER ─────────────────────────
+  function loadMember() {
+    if (DEMO) {
+      document.getElementById("demoBanner").classList.remove("hidden");
+      var renewal = addMonthsISO(todayISO(), 1);
+      return Promise.resolve(buildMember("Alex Morgan", "alex@example.com", "Unlimited", Date.parse(renewal + "T00:00:00Z") / 1000));
+    }
+    var token = params.get("token");
+    if (!token) return Promise.reject(new Error("no-token"));
+
+    return fetch(CONFIG.OPTIX_GRAPHQL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+      body: JSON.stringify({
+        query: "query { me { user { name email } } accountPlans(status: ACTIVE, limit: 10) { data { name next_invoice_timestamp } } }"
+      })
+    })
+      .then(function (r) { if (!r.ok) throw new Error("http-" + r.status); return r.json(); })
+      .then(function (json) {
+        if (json.errors && json.errors.length) throw new Error("graphql");
+        var user = json.data && json.data.me && json.data.me.user;
+        var plans = (json.data && json.data.accountPlans && json.data.accountPlans.data) || [];
+        if (!user || !user.email) throw new Error("no-email");
+        var plan = plans.filter(function (p) { return p.next_invoice_timestamp; })[0];
+        // Unlike the old page we do NOT fall back to today's date: no renewal date = contact the team.
+        if (!plan) throw new Error("no-renewal");
+        return buildMember(user.name || "", user.email, plan.name, plan.next_invoice_timestamp);
+      });
+  }
+
+  function buildMember(fullName, email, planName, nextInvoiceTs) {
+    var renewalDate = londonISO(new Date(nextInvoiceTs * 1000));
+    var endDate = londonISO(new Date((nextInvoiceTs - 86400) * 1000)); // day before renewal
+    return {
+      fullName: fullName,
+      firstName: (fullName || "").trim().split(/\s+/)[0] || "",
+      email: email,
+      planName: planName || "your plan",
+      renewalDate: renewalDate,
+      endDate: endDate
+    };
+  }
+
+  // ───────────────────────── RENDER HELPERS ─────────────────────────
+  var app = document.getElementById("app");
+  function el(tag, attrs, children) {
+    var n = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) {
+      if (attrs[k] === null || attrs[k] === undefined) return;
+      if (k === "class") n.className = attrs[k];
+      else if (k === "text") n.textContent = attrs[k];
+      else if (k.indexOf("on") === 0) n.addEventListener(k.slice(2), attrs[k]);
+      else n.setAttribute(k, attrs[k]);
+    });
+    (children || []).forEach(function (c) { if (c) n.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+    return n;
+  }
+  function header(stepIndex, total) {
+    var prog = el("div", { class: "progress", "aria-hidden": "true" });
+    for (var i = 0; i < total; i++) prog.appendChild(el("span", { class: i <= stepIndex ? "on" : "" }));
+    return el("div", { class: "brand" }, ["Drop-in", total ? prog : null]);
+  }
+  function backBtn() {
+    return history.length ? el("button", { class: "back", type: "button", onclick: goBack, text: "← Back" }) : null;
+  }
+  function go(step) { history.push(state.step); state.step = step; render(); window.scrollTo(0, 0); }
+  function goBack() { state.step = history.pop() || "intro"; state.submitError = false; render(); window.scrollTo(0, 0); }
+  function mount(nodes) { app.innerHTML = ""; nodes.forEach(function (n) { if (n) app.appendChild(n); }); }
+
+  // ───────────────────────── SCREENS ─────────────────────────
+  function render() {
+    var m = state.member;
+    switch (state.step) {
+
+      case "intro":
+        mount([
+          header(0, 4),
+          el("h1", { text: m.firstName ? "Hi " + m.firstName + "." : "Hi there." }),
+          el("p", { text: "Thinking of stepping away? Fair enough. Tell us what's changed and we'll show you your options. It takes about a minute." }),
+          el("div", { class: "plan-card" }, [
+            el("div", { class: "row" }, [el("span", { class: "label", text: "Your plan" }), el("span", { class: "value", text: m.planName })]),
+            el("div", { class: "row" }, [el("span", { class: "label", text: "Next renewal" }), el("span", { class: "value", text: pretty(m.renewalDate) })])
+          ]),
+          el("div", { class: "spacer" }),
+          el("button", { class: "btn btn-primary", type: "button", onclick: function () { go("reason"); }, text: "Start" })
+        ]);
+        break;
+
+      case "reason":
+        var list = el("div", { class: "options", role: "group", "aria-label": "Reason" });
+        REASONS.forEach(function (r) {
+          list.appendChild(el("button", {
+            class: "opt", type: "button", "aria-pressed": state.reason === r ? "true" : "false",
+            onclick: function () { state.reason = r; go("options"); }
+          }, [el("span", { class: "dot" }), r.label]));
+        });
+        mount([header(1, 4), backBtn(), el("h1", { text: "What's changed?" }), el("p", { class: "muted", text: "Pick the closest one. There's room for detail later." }), list]);
+        break;
+
+      case "options":
+        var leadLite = state.reason.offer === "lite" && !/lite/i.test(m.planName);
+        var lite = /lite/i.test(m.planName) ? null : offerLite(leadLite);
+        var pause = offerPause(!leadLite);
+        mount([
+          header(2, 4), backBtn(),
+          el("h1", { text: "Before you go" }),
+          el("p", { class: "muted", text: "Most people who leave just need something lighter, or a few months off. Both are yours if you want them." }),
+          leadLite ? lite : pause,
+          leadLite ? pause : lite,
+          el("button", { class: "link", type: "button", onclick: function () { state.path = "cancel"; go("cancel"); }, text: "No thanks, I'd like to cancel" })
+        ]);
+        break;
+
+      case "pause":
+        var seg = el("div", { class: "seg", role: "group", "aria-label": "Pause length" });
+        for (var i = 1; i <= CONFIG.MAX_PAUSE_MONTHS; i++) (function (n) {
+          seg.appendChild(el("button", {
+            type: "button", "aria-pressed": state.pauseMonths === n ? "true" : "false",
+            onclick: function () { state.pauseMonths = n; render(); },
+            text: n + (n === 1 ? " month" : " months")
+          }));
+        })(i);
+        var back = state.pauseMonths ? addMonthsISO(m.renewalDate, state.pauseMonths) : null;
+        mount([
+          header(3, 4), backBtn(),
+          el("h1", { text: "How long do you need?" }),
+          el("p", { class: "muted", text: "Up to " + CONFIG.MAX_PAUSE_MONTHS + " months. Your club will still be here." }),
+          seg,
+          back ? el("div", { class: "plan-card" }, [
+            el("div", { class: "row" }, [el("span", { class: "label", text: "Last day before pause" }), el("span", { class: "value", text: pretty(m.endDate) })]),
+            el("div", { class: "row" }, [el("span", { class: "label", text: "Back from" }), el("span", { class: "value", text: pretty(back) })])
+          ]) : null,
+          el("label", { class: "small muted", for: "fb", text: "Anything we should know? (optional)" }),
+          feedbackBox(),
+          el("div", { class: "spacer" }),
+          el("button", { class: "btn btn-primary", type: "button", disabled: state.pauseMonths ? null : "disabled", onclick: function () { go("confirm"); }, text: "Review my pause" })
+        ]);
+        break;
+
+      case "lite":
+        mount([
+          header(3, 4), backBtn(),
+          el("h1", { text: "Lite it is." }),
+          el("p", { text: CONFIG.LITE.hours + " hours a month for " + CONFIG.LITE.price + ", starting from your next renewal on " + pretty(m.renewalDate) + ". Same clubs, same coffee." }),
+          el("label", { class: "small muted", for: "fb", text: "Anything we should know? (optional)" }),
+          feedbackBox(),
+          el("div", { class: "spacer" }),
+          el("button", { class: "btn btn-primary", type: "button", onclick: function () { go("confirm"); }, text: "Review my switch" })
+        ]);
+        break;
+
+      case "cancel":
+        var ro = el("div", { class: "options", role: "group", "aria-label": "Coming back?" });
+        RETURN_OPTIONS.forEach(function (o) {
+          ro.appendChild(el("button", {
+            class: "opt", type: "button", "aria-pressed": state.returnOpt === o ? "true" : "false",
+            onclick: function () { state.returnOpt = o; render(); }
+          }, [el("span", { class: "dot" }), o.label]));
+        });
+        var dateInput = null;
+        if (state.returnOpt && state.returnOpt.needsDate) {
+          dateInput = el("input", { type: "date", id: "rd", min: m.renewalDate, value: state.returnDate,
+            oninput: function (e) { state.returnDate = e.target.value; refreshCancelBtn(); } });
+        }
+        var cancelBtn = el("button", { class: "btn btn-primary", id: "cancelNext", type: "button", onclick: function () { go("confirm"); }, text: "Review" });
+        mount([
+          header(3, 4), backBtn(),
+          el("h1", { text: "Will we see you again?" }),
+          ro,
+          dateInput ? el("label", { class: "small muted", for: "rd", text: "Roughly when?" }) : null,
+          dateInput,
+          el("label", { class: "small muted", for: "fb", text: "What would have made you stay? Honest answers help us most." }),
+          feedbackBox(),
+          el("div", { class: "spacer" }),
+          cancelBtn
+        ]);
+        refreshCancelBtn();
+        break;
+
+      case "confirm":
+        var rows = [["Plan", m.planName]];
+        var title, button;
+        if (state.path === "pause") {
+          title = "Confirm your pause";
+          rows.push(["Pause", state.pauseMonths + (state.pauseMonths === 1 ? " month" : " months")]);
+          rows.push(["Last day", pretty(m.endDate)]);
+          rows.push(["Back from", pretty(addMonthsISO(m.renewalDate, state.pauseMonths))]);
+          button = "Pause my membership";
+        } else if (state.path === "lite") {
+          title = "Confirm your switch";
+          rows.push(["New plan", "Lite, " + CONFIG.LITE.hours + " hrs/month"]);
+          rows.push(["Price", CONFIG.LITE.price + "/month"]);
+          rows.push(["Starts", pretty(m.renewalDate)]);
+          button = "Switch me to Lite";
+        } else {
+          title = "Confirm your cancellation";
+          rows.push(["Last day", pretty(m.endDate)]);
+          rows.push(["Reason", state.reason.label]);
+          button = "Cancel my membership";
+        }
+        var summary = el("div", { class: "summary" });
+        rows.forEach(function (r) { summary.appendChild(el("div", { class: "row" }, [el("span", { class: "k", text: r[0] }), el("span", { class: "v", text: r[1] })])); });
+        mount([
+          header(3, 4), backBtn(),
+          el("h1", { text: title }),
+          summary,
+          el("p", { class: "small muted", text: "Nothing changes today. Your access stays as it is until " + pretty(m.endDate) + ". The team will confirm everything with you within 1 working day." }),
+          state.submitError ? el("div", { class: "error-box" }, [
+            "That didn't go through. Try again, or email ",
+            el("a", { href: "mailto:" + CONFIG.TEAM_EMAIL, text: CONFIG.TEAM_EMAIL }),
+            " and we'll sort it."
+          ]) : null,
+          el("div", { class: "spacer" }),
+          el("button", { class: "btn btn-primary", type: "button", disabled: state.submitting ? "disabled" : null, onclick: submit, text: state.submitting ? "Sending…" : button })
+        ]);
+        break;
+
+      case "done":
+        var h, body;
+        if (state.path === "pause") {
+          h = "Paused. See you in " + monthName(addMonthsISO(m.renewalDate, state.pauseMonths)) + ".";
+          body = "The team will confirm your pause within 1 working day. You won't be charged while you're away.";
+        } else if (state.path === "lite") {
+          h = "Done. Lite from " + pretty(m.renewalDate) + ".";
+          body = "The team will switch your plan and confirm within 1 working day. Nothing changes before then.";
+        } else {
+          h = "Thanks, request received.";
+          body = "You don't need to do anything else. Someone from the team will be in touch within 1 working day. Your membership stays active until " + pretty(m.endDate) + ".";
+        }
+        mount([
+          header(4, 0),
+          el("h1", { text: h }),
+          el("p", { text: body }),
+          el("p", { class: "small muted", text: "No need to send this again. If something's wrong, email " + CONFIG.TEAM_EMAIL + "." })
+        ]);
+        break;
+
+      case "error":
+        mount([
+          header(0, 0),
+          el("h1", { text: "We couldn't load your membership." }),
+          el("p", { text: "This one needs a human. Email the team and they'll pause or cancel for you." }),
+          el("a", { class: "btn btn-primary", href: "mailto:" + CONFIG.TEAM_EMAIL + "?subject=" + encodeURIComponent("Pause or cancel my membership"), text: "Email " + CONFIG.TEAM_EMAIL }),
+          el("p", { class: "small muted", text: "Or speak to anyone at the front desk next time you're in." })
+        ]);
+        break;
+    }
+  }
+
+  function offerLite(lead) {
+    return el("div", { class: "offer" + (lead ? " lead" : "") }, [
+      lead ? el("span", { class: "tag", text: "Might suit you better" }) : null,
+      el("h2", { text: "Switch to Lite" }),
+      el("div", { class: "price", text: CONFIG.LITE.price + " a month" }),
+      el("ul", {}, [
+        el("li", { text: CONFIG.LITE.hours + " hours a month, used whenever" }),
+        el("li", { text: "Same clubs, same coffee" }),
+        el("li", { text: "Starts at your next renewal" })
+      ]),
+      el("button", { class: "btn " + (lead ? "btn-primary" : "btn-ghost"), type: "button", onclick: function () { state.path = "lite"; go("lite"); }, text: "Switch to Lite" })
+    ]);
+  }
+  function offerPause(lead) {
+    return el("div", { class: "offer" + (lead ? " lead" : "") }, [
+      lead ? el("span", { class: "tag", text: "Might suit you better" }) : null,
+      el("h2", { text: "Pause instead" }),
+      el("p", { class: "muted", text: "Take up to " + CONFIG.MAX_PAUSE_MONTHS + " months off. No charges while you're away, and you come back on the same plan." }),
+      el("button", { class: "btn " + (lead ? "btn-primary" : "btn-ghost"), type: "button", onclick: function () { state.path = "pause"; go("pause"); }, text: "Pause my membership" })
+    ]);
+  }
+  function feedbackBox() {
+    return el("textarea", { id: "fb", maxlength: "2000", oninput: function (e) { state.feedback = e.target.value; } }, [state.feedback]);
+  }
+  function refreshCancelBtn() {
+    var b = document.getElementById("cancelNext"); if (!b) return;
+    var ok = state.returnOpt && (!state.returnOpt.needsDate || state.returnDate);
+    if (ok) b.removeAttribute("disabled"); else b.setAttribute("disabled", "disabled");
+  }
+  function monthName(iso) { return new Date(iso + "T12:00:00Z").toLocaleDateString("en-GB", { month: "long", timeZone: "UTC" }); }
+
+  // ───────────────────────── SUBMIT ─────────────────────────
+  function buildFields() {
+    var m = state.member;
+    var f = [
+      { name: "email", value: m.email },
+      { name: "cancellation_requested_date", value: m.endDate },   // = requested END date (renewal − 1), same as today
+      { name: "churn_reason", value: state.reason.value },
+      { name: CONFIG.REQUEST_TYPE_PROPERTY, value: CONFIG.REQUEST_TYPE[state.path.toUpperCase()] }
+    ];
+    if (state.feedback.trim()) f.push({ name: "leaving_reason", value: state.feedback.trim() });
+    if (state.path === "pause") {
+      f.push({ name: "exit_tyupe", value: "Planned Pause (return date confirmed)" });
+      f.push({ name: "expected_return_date", value: addMonthsISO(m.renewalDate, state.pauseMonths) });
+    } else if (state.path === "cancel") {
+      f.push({ name: "exit_tyupe", value: state.returnOpt.value });
+      if (state.returnOpt.needsDate && state.returnDate) f.push({ name: "expected_return_date", value: state.returnDate });
+    }
+    // Lite: no exit_tyupe — they're not leaving.
+    return f;
+  }
+
+  function submit() {
+    if (state.submitting) return;
+    var payload = {
+      fields: buildFields(),
+      context: { pageUri: window.location.origin + window.location.pathname, pageName: "Optix – Pause or cancel my membership" }
+    };
+    if (DEMO) {
+      console.log("[demo] would submit to HubSpot:", JSON.stringify(payload, null, 2));
+      go("done");
+      return;
+    }
+    state.submitting = true; state.submitError = false; render();
+    fetch(CONFIG.HUBSPOT_SUBMIT_BASE + "/" + CONFIG.HUBSPOT_PORTAL_ID + "/" + CONFIG.HUBSPOT_FORM_GUID, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+      .then(function (r) { if (!r.ok) throw new Error("hubspot-" + r.status); })
+      .then(function () { state.submitting = false; go("done"); })
+      .catch(function () { state.submitting = false; state.submitError = true; render(); });
+  }
+
+  // ───────────────────────── BOOT ─────────────────────────
+  loadMember()
+    .then(function (member) { state.member = member; state.step = "intro"; render(); })
+    .catch(function () { state.step = "error"; render(); });
+})();
+</script>
+</body>
+</html>
