@@ -157,7 +157,8 @@
     returnDate: "",
     feedback: "",
     submitting: false,
-    submitError: false
+    submitError: false,
+    errorCode: ""
   };
   var history = [];
 
@@ -424,7 +425,8 @@
           el("h1", { text: "We couldn't load your membership." }),
           el("p", { text: "This one needs a human. Email the team and they'll pause or cancel for you." }),
           el("a", { class: "btn btn-primary", href: "mailto:" + CONFIG.TEAM_EMAIL + "?subject=" + encodeURIComponent("Pause or cancel my membership"), text: "Email " + CONFIG.TEAM_EMAIL }),
-          el("p", { class: "small muted", text: "Or speak to anyone at the front desk next time you're in." })
+          el("p", { class: "small muted", text: "Or speak to anyone at the front desk next time you're in." }),
+          el("p", { class: "small muted", text: "Error code: " + (state.errorCode || "unknown") })
         ]);
         break;
     }
@@ -507,7 +509,7 @@
   // ───────────────────────── BOOT ─────────────────────────
   loadMember()
     .then(function (member) { state.member = member; state.step = "intro"; render(); })
-    .catch(function () { state.step = "error"; render(); });
+    .catch(function (e) { state.errorCode = (e && e.message) || "unknown"; state.step = "error"; render(); });
 })();
 </script>
 </body>
