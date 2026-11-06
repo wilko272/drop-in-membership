@@ -151,6 +151,9 @@
 
   // ───────────────────────── STATE ─────────────────────────
   var params = new URLSearchParams(window.location.search);
+  // The Drop-in app sends the member's token after "#", which browsers never send
+  // to the web server, so it stays out of GitHub's logs. "?token=" still works.
+  var hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
   var DEMO = params.get("demo") === "1";
   var state = {
     member: null,          // { fullName, firstName, email, planName, renewalDate, endDate }
@@ -194,7 +197,7 @@
       var renewal = addMonthsISO(todayISO(), 1);
       return Promise.resolve(buildMember("Alex Morgan", "alex@example.com", "Unlimited", Date.parse(renewal + "T00:00:00Z") / 1000));
     }
-    var token = params.get("token");
+    var token = hashParams.get("token") || params.get("token");
     if (!token) return Promise.reject(new Error("no-token"));
 
     return fetch(CONFIG.OPTIX_GRAPHQL, {
