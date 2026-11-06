@@ -29,6 +29,8 @@
   }
   .wrap { max-width: 480px; margin: 0 auto; padding: 24px 20px 48px; min-height: 100vh; display: flex; flex-direction: column; }
   .brand { font-weight: 700; letter-spacing: .08em; font-size: 13px; color: var(--purple); text-transform: uppercase; margin-bottom: 18px; display:flex; justify-content:space-between; align-items:center; }
+  .logo { display: block; line-height: 0; }
+  .logo svg { height: 20px; width: auto; display: block; }
   .progress { display: flex; gap: 6px; }
   .progress span { width: 22px; height: 4px; border-radius: 4px; background: var(--line); }
   .progress span.on { background: var(--purple); }
@@ -144,6 +146,9 @@
     { label: "Not for now", value: "Hard Churn (done for now)" }
   ];
 
+  // Drop-in logo (purple), inlined from drop-in.com so it never depends on another site loading.
+  var LOGO_SVG = '<svg viewBox="0 0 200 45" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Drop-in"><path d="M11.9439 11.0904H15.3567C18.3427 11.0904 20.1707 13.0408 20.1707 22.3643C20.1707 31.6879 18.3427 33.5159 15.3567 33.5159H11.9439V11.0904ZM15.3567 0.487898H0V44.0599H15.3567C25.107 44.0599 32.1147 39.428 32.1147 22.3656C32.1147 5.30319 25.107 0.487898 15.3567 0.487898ZM46.7401 19.5006V11.0904H49.4828C51.6153 11.0904 53.2611 13.1019 53.2611 15.3567C53.2611 17.6115 51.6153 19.5006 49.4828 19.5006H46.7401ZM46.7401 44.0586V29.7987H48.386L54.4191 44.0586H67.4599L59.6599 26.8739C63.1936 24.0713 65.2662 19.9873 65.2662 15.3567C65.2662 7.12994 58.4408 0.487898 50.0318 0.487898H34.7975V44.0599H46.7414L46.7401 44.0586ZM115.173 19.5605V11.0904H117.976C120.108 11.0904 121.693 13.1019 121.693 15.2955C121.693 17.4892 120.108 19.5618 117.976 19.5618H115.173V19.5605ZM115.173 44.0586V30.1643H118.586C126.935 30.1643 133.759 23.5223 133.759 15.3567C133.759 7.19108 126.935 0.487898 118.586 0.487898H103.229V44.0599H115.173V44.0586ZM152.894 20.2917H135.039V29.4331H152.894V20.2917ZM166.666 0.487898H154.722V44.0599H166.666V0.487898ZM180.317 44.0599V22.7924L188.971 44.0599H200V0.487898H188.544V21.9389L179.95 0.487898H168.92V44.0599H180.316H180.317ZM89.0319 22.4268C89.0319 32.2382 86.4726 34.0662 84.1567 34.0662C81.8408 34.0662 79.2815 32.2382 79.2815 22.4268C79.2815 12.6153 81.9019 10.665 84.1567 10.665C86.4115 10.665 89.0319 12.493 89.0319 22.4268ZM100.976 22.4268C100.975 4.63185 93.4191 0 84.1554 0C74.8917 0 67.3363 4.63185 67.3363 22.4255C67.3363 40.2191 74.8318 44.6688 84.1554 44.6688C93.479 44.6688 100.975 40.0981 100.975 22.4255" fill="#6952BA"/></svg>';
+
   // ───────────────────────── STATE ─────────────────────────
   var params = new URLSearchParams(window.location.search);
   var DEMO = params.get("demo") === "1";
@@ -242,7 +247,8 @@
   function header(stepIndex, total) {
     var prog = el("div", { class: "progress", "aria-hidden": "true" });
     for (var i = 0; i < total; i++) prog.appendChild(el("span", { class: i <= stepIndex ? "on" : "" }));
-    return el("div", { class: "brand" }, ["Drop-in", total ? prog : null]);
+    var logo = el("span", { class: "logo" }); logo.innerHTML = LOGO_SVG;
+    return el("div", { class: "brand" }, [logo, total ? prog : null]);
   }
   function backBtn() {
     return history.length ? el("button", { class: "back", type: "button", onclick: goBack, text: "← Back" }) : null;
