@@ -157,6 +157,7 @@
   // to the web server, so it stays out of GitHub's logs. "?token=" still works.
   var hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
   var DEMO = params.get("demo") === "1";
+  var PREVIEW = false; // set for staff accounts without a paid plan
   var state = {
     member: null,          // { fullName, firstName, email, planName, renewalDate, endDate }
     step: "loading",
@@ -240,6 +241,19 @@
         // Unlike the old page we do NOT fall back to today's date: no renewal date = contact the team.
         if (!plan) throw new Error("no-renewal");
         return buildMember(user.name || "", user.email, plan.name, plan.next_invoice_timestamp);
+      })
+      .catch(function (err) {
+        // Staff (@drop-in.com) with no paid plan get a preview of the flow instead of the error.
+        // Sample renewal date, and nothing is sent to HubSpot.
+        if (user && user.email && /@drop-in\.com$/i.test(user.email)) {
+          PREVIEW = true;
+          var banner = document.getElementById("demoBanner");
+          banner.textContent = "Staff preview: sample renewal date, nothing is submitted" + (err && err.message !== "no-renewal" ? " (" + err.message + ")" : "");
+          banner.classList.remove("hidden");
+          var sample = addMonthsISO(todayISO(), 1);
+          return buildMember(user.name || "", user.email, "Staff preview", Date.parse(sample + "T00:00:00Z") / 1000);
+        }
+        throw err;
       });
   }
 
@@ -522,7 +536,7 @@
       fields: buildFields(),
       context: { pageUri: window.location.origin + window.location.pathname, pageName: "Optix – Pause or cancel my membership" }
     };
-    if (DEMO) {
+    if (DEMO || PREVIEW) {
       console.log("[demo] would submit to HubSpot:", JSON.stringify(payload, null, 2));
       go("done");
       return;
