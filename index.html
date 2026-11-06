@@ -112,6 +112,8 @@
   // ───────────────────────── CONFIG ─────────────────────────
   var CONFIG = {
     OPTIX_GRAPHQL: "https://api.optixapp.com/graphql",
+    // Drop-in's Optix organisation. Member tokens must name it when asking for plans.
+    OPTIX_ORG_ID: 24740,
     // HubSpot form "Pause / Lite / Cancel - In-app flow (2026)" (portal 143715922, EU1). Clone of the old form with only email required.
     HUBSPOT_PORTAL_ID: "143715922",
     HUBSPOT_FORM_GUID: "da7ff2c0-8fcd-4503-b5e0-92b98c8a26a5",
@@ -200,20 +202,39 @@
     var token = hashParams.get("token") || params.get("token");
     if (!token) return Promise.reject(new Error("no-token"));
 
-    return fetch(CONFIG.OPTIX_GRAPHQL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
-      body: JSON.stringify({
-        query: "query { me { user { name email } } accountPlans(status: ACTIVE, limit: 10) { data { name next_invoice_timestamp } } }"
+    function optix(query, variables) {
+      return fetch(CONFIG.OPTIX_GRAPHQL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+        body: JSON.stringify({ query: query, variables: variables || {} })
       })
-    })
-      .then(function (r) { if (!r.ok) throw new Error("http-" + r.status); return r.json(); })
-      .then(function (json) {
-        if (json.errors && json.errors.length) throw new Error("graphql");
-        var user = json.data && json.data.me && json.data.me.user;
-        var plans = (json.data && json.data.accountPlans && json.data.accountPlans.data) || [];
+        .then(function (r) { if (!r.ok) throw new Error("http-" + r.status); return r.json(); })
+        .then(function (json) {
+          if (json.errors && json.errors.length) throw new Error("graphql");
+          return json.data || {};
+        });
+    }
+
+    // A member's token must name the organisation when it asks for plans, and
+    // admin_mode: false asks for the member's own view. This is the same query the
+    // Drop-in app's server uses (lib/optix.js in drop-in-app). Plans are filtered
+    // to current ones here, as the server does, rather than by an Optix argument.
+    var user;
+    return optix("query { me { user { user_id name email } } }")
+      .then(function (data) {
+        user = data.me && data.me.user;
         if (!user || !user.email) throw new Error("no-email");
-        var plan = plans.filter(function (p) { return p.next_invoice_timestamp; })[0];
+        return optix(
+          "query($uid: [ID!]) { accountPlans(organization_id: " + CONFIG.OPTIX_ORG_ID +
+            ", admin_mode: false, access_usage_user_id: $uid, limit: 10) { data { name status next_invoice_timestamp } } }",
+          { uid: [String(user.user_id)] }
+        );
+      })
+      .then(function (data) {
+        var plans = (data.accountPlans && data.accountPlans.data) || [];
+        var plan = plans.filter(function (p) {
+          return (p.status === "ACTIVE" || p.status === "IN_TRIAL") && p.next_invoice_timestamp;
+        })[0];
         // Unlike the old page we do NOT fall back to today's date: no renewal date = contact the team.
         if (!plan) throw new Error("no-renewal");
         return buildMember(user.name || "", user.email, plan.name, plan.next_invoice_timestamp);
