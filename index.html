@@ -210,31 +210,33 @@
       })
         .then(function (r) { if (!r.ok) throw new Error("http-" + r.status); return r.json(); })
         .then(function (json) {
-          if (json.errors && json.errors.length) throw new Error("graphql: " + String(json.errors[0].message || "").slice(0, 120));
+          if (json.errors && json.errors.length) throw new Error("graphql: " + String(json.errors[0].message || "").slice(0, 160));
           return json.data || {};
         });
     }
 
-    // A member's token must name the organisation when it asks for plans, and
-    // admin_mode: false asks for the member's own view. This is the same query the
-    // Drop-in app's server uses (lib/optix.js in drop-in-app). Plans are filtered
-    // to current ones here, as the server does, rather than by an Optix argument.
+    // Ask for the member first, then their active plans. Optix rejected
+    // accountPlans(organization_id: ...) from a member token ("Unknown argument"),
+    // so this uses the exact plans request the old page ran in production.
     var user;
     return optix("query { me { user { user_id name email } } }")
       .then(function (data) {
         user = data.me && data.me.user;
         if (!user || !user.email) throw new Error("no-email");
-        return optix(
-          "query($uid: [ID!]) { accountPlans(organization_id: " + CONFIG.OPTIX_ORG_ID +
-            ", admin_mode: false, access_usage_user_id: $uid, limit: 10) { data { name status next_invoice_timestamp } } }",
-          { uid: [String(user.user_id)] }
-        );
+        // Same plans request the old page used in production since go-live.
+        return optix("query { accountPlans(status: ACTIVE, limit: 10) { data { name next_invoice_timestamp } } }")
+          .catch(function (err) {
+            // Diagnostic: if Optix rejects the request, add the arguments it does accept to the error code.
+            return optix("{ __type(name: \"Query\") { fields { name args { name } } } }")
+              .then(function (d) {
+                var f = ((d.__type && d.__type.fields) || []).filter(function (x) { return x.name === "accountPlans"; })[0];
+                throw new Error(err.message + (f ? " | accepts: " + f.args.map(function (a) { return a.name; }).join(", ") : ""));
+              }, function () { throw err; });
+          });
       })
       .then(function (data) {
         var plans = (data.accountPlans && data.accountPlans.data) || [];
-        var plan = plans.filter(function (p) {
-          return (p.status === "ACTIVE" || p.status === "IN_TRIAL") && p.next_invoice_timestamp;
-        })[0];
+        var plan = plans.filter(function (p) { return p.next_invoice_timestamp; })[0];
         // Unlike the old page we do NOT fall back to today's date: no renewal date = contact the team.
         if (!plan) throw new Error("no-renewal");
         return buildMember(user.name || "", user.email, plan.name, plan.next_invoice_timestamp);
